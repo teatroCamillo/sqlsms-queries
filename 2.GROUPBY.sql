@@ -144,10 +144,34 @@ group by OrderID
 order by total desc;
 
 --1.3.Zmodyfikuj zapytanie z punktu 1.2, tak aby zwracało 10 pierwszych produktów wliczając równorzędne. Porównaj wyniki.
+select top 10 with ties OrderID, SUM(quantity * (unitprice - (unitprice * discount))) as total
+from [Order Details]
+group by OrderID
+order by total desc;
+
 --2.1.Podaj liczbę zamówionych jednostek produktów dla produktów, dla których productid < 3
+select productid, sum(quantity)
+from [Order Details]
+where ProductID < 3
+group by productid;
+
 --2.2.Zmodyfikuj zapytanie z punktu 2.1 tak aby podawało liczbę zamówionych jednostek produktu dla wszystkich produktów
+select productid, sum(quantity)
+from [Order Details]
+group by productid;
+
 --2.3.Podaj wartość zamówienia dla każdego zamówienia dla którego łączna liczba zamawianych jednostek produktów jest > 250
+select productid, sum(quantity) as quan, SUM(Quantity*(UnitPrice - (Unitprice * Discount))) as total
+from [Order Details]
+group by productid
+having SUM(quantity) > 250;
+
 --3.1.Napisz polecenie, które oblicza sumaryczną ilość zamówionych towarów, porządkuje wynik wg productid i ordered i wykonuje kalkulacje rollup.
+select productid, orderid, SUM(Quantity) 
+from [Order Details]
+group by productid, OrderID
+with rollup;
+
 --3.2.Zmodyfikuj zapytanie z punktu 3.1, tak aby ograniczyć wynik tylko do produktu o numerze 50.
 --3.3.Jakie jest znaczenie wartości null w kolumnie productid i orderid?
 --4.1.Napisz polecenie, które zwraca productid, orderid i quantity dla wszystkich produktów/zamówień, których orderid > 11070.
