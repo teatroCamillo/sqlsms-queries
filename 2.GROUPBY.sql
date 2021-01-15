@@ -170,15 +170,53 @@ having SUM(quantity) > 250;
 select productid, orderid, SUM(Quantity) 
 from [Order Details]
 group by productid, OrderID
-with rollup;
+with rollup
+order by ProductID, OrderID;
 
 --3.2.Zmodyfikuj zapytanie z punktu 3.1, tak aby ograniczyć wynik tylko do produktu o numerze 50.
+select productid, orderid, SUM(Quantity) 
+from [Order Details]
+where ProductID = 50
+group by productid, OrderID
+with rollup
+order by ProductID, OrderID;
+
 --3.3.Jakie jest znaczenie wartości null w kolumnie productid i orderid?
---4.1.Napisz polecenie, które zwraca productid, orderid i quantity dla wszystkich produktów/zamówień, których orderid > 11070.
---Po każdej zmianie productid podsumuj liczbę zamówionych jednostek produktu
+
+
+--4.1.Napisz polecenie, które zwraca productid, orderid i quantity dla wszystkich produktów/zamówień, których orderid > 11070. 
+select ProductID, orderid, quantity
+from [Order Details]
+where OrderID > 11070;
+
+
 --5.1.Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień
+select Employeeid, COUNT(orderid)
+from Orders
+group by EmployeeID;
+
 --5.2.Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień z podziałem na lata i miesiące
+select Employeeid, year(orderDate) as y, MONTH(orderdate) as m, COUNT(orderid) as total
+from Orders
+group by EmployeeID, YEAR(OrderDate), MONTH(orderdate)
+with rollup
+order by EmployeeID;
+
 --5.3.Dla każdego spedytora podaj wartość (opłata za przesyłkę) przewożonych przez niego zamówień
+select shipvia, sum(Freight)
+from orders
+group by ShipVia;
+
 --5.4.Dla każdego spedytora podaj wartość (opłata za przesyłkę) przewożonych przez niego zamówień z podziałem na poszczególne lata
+select shipvia, YEAR(shippeddate) as y, sum(Freight)
+from orders
+group by ShipVia, YEAR(shippeddate)
+with rollup
+order by ShipVia, YEAR(shippeddate);
+
 --5.5.Dla każdej kategorii podaj maksymalną i minimalną cenę produktu w tej kategorii
+select CategoryID, MAX(unitprice) as max, MIN(unitprice) as min
+from Products
+group by CategoryID
+order by CategoryID;
 
