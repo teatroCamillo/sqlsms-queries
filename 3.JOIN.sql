@@ -161,6 +161,13 @@ on j.member_no = m.member_no
 join adult as a
 on j.adult_member_no = a.member_no;
 
+SELECT firstname, lastname, birth_date, street 
+FROM juvenile 
+INNER JOIN member 
+ON member.member_no=juvenile.member_no 
+INNER JOIN adult 
+ON adult.member_no=juvenile.adult_member_no;
+
 --Napisz polecenie, które wyświetla listę dzieci będących członkami biblioteki (baza library). Interesuje nas imię, nazwisko, data urodzenia dziecka, adres zamieszkania dziecka oraz imię i nazwisko rodzica.
 select mj.firstname as [Chaild Firstname], mj.lastname as [Chaild Lastname], j.birth_date, a.street, a.city, ma.firstname as [Paretn Firstname], ma.lastname as [Parent Lastname]
 from juvenile as j
@@ -186,15 +193,132 @@ on a.prod_id = b.prod_id
 where a.buyer_id <> b.buyer_id;
 
 --Napisz polecenie, które pokazuje pary pracowników zajmujących to samo stanowisko.
+use Northwind
+select e0.EmployeeID, e0.Title, e1.EmployeeID, e1.Title
+from Employees as e0
+join Employees as e1
+on e0.Title = e1.Title
+where e0.EmployeeID < e1.EmployeeID;
 
 --Napisz polecenie, które wyświetla pracowników oraz ich podwładnych (baza northwind)
+select e0.EmployeeID, e1.ReportsTo
+from Employees as e0
+join Employees as e1
+on e0.EmployeeID = e1.EmployeeID;
+
+SELECT e1.lastname+' '+e1.firstname as szef, e2.lastname+' '+e2.firstname as podwladny 
+FROM Employees as e1
+JOIN Employees as e2 
+ON e1.EmployeeID=e2.ReportsTo
+
+
 --Napisz polecenie, które wyświetla pracowników, którzy nie mają podwładnych (baza northwind)
+select e0.EmployeeID, e1.ReportsTo, e0.FirstName, e0.LastName
+from Employees as e0
+join Employees as e1
+on e0.EmployeeID = e1.EmployeeID
+where e1.ReportsTo is null;
+
+SELECT FirstName+' '+Lastname 
+FROM Employees
+WHERE ReportsTo IS NULL
+
+
 --Napisz polecenie, które wyświetla adresy członków biblioteki, którzy mają dzieci urodzone przed 1 stycznia 1996
+use library
+select a.city, a.state, a.street, a.zip
+from juvenile as j
+join adult as a
+on a.member_no = j.adult_member_no
+where j.birth_date < '1/1/96';
+
+SELECT street, city 
+FROM adult
+INNER JOIN juvenile 
+ON adult.member_no=juvenile.adult_member_no
+WHERE birth_date < '1996-01-01'
+
 --Napisz polecenie, które wyświetla adresy członków biblioteki, którzy mają dzieci urodzone przed 1 stycznia 1996. Interesują nas tylko adresy takich członków biblioteki, którzy aktualnie nie przetrzymują książek.
+select distinct a.member_no, a.city, a.state, a.street, a.zip
+from adult as a
+join juvenile as j
+on a.member_no = j.adult_member_no
+left join loan as l
+on l.member_no = a.member_no
+where j.birth_date < '1/1/96' and l.member_no is null;
+
+select distinct a.member_no, a.city, a.state, a.street, a.zip
+from adult as a
+join juvenile as j
+on a.member_no = j.adult_member_no
+where j.birth_date < '1996-01-01' and a.member_no not in (select distinct member_no from loan);
 
 --Napisz polecenie które zwraca imię i nazwisko (jako pojedynczą kolumnę – name), oraz informacje o adresie: ulica, miasto, stan kod (jako pojedynczą kolumnę – address) dla wszystkich dorosłych członków biblioteki
+select distinct m.firstname + ' ' + m.lastname as name, a.street + ' ' + a.city + ' ' + a.zip as address
+from adult as a
+join member as m
+on a.member_no = m.member_no;
+
 --Napisz polecenie, które zwraca: isbn, copy_no, on_loan, title, translation, cover, dla książek o isbn 1, 500 i 1000. Wynik posortuj wg ISBN
+select distinct i.isbn, c.copy_no, c.on_loan, t.title, i.translation, i.cover
+from item as i
+join copy as c
+on i.isbn = c.isbn
+join title as t
+on t.title_no = i.title_no
+where i.isbn = 1 or i.isbn = 500 or i.isbn = 1000
+order by 1;
+
 --Napisz polecenie które zwraca o użytkownikach biblioteki o nr 250, 342, i 1675 (dla każdego użytkownika: nr, imię i nazwisko członka biblioteki), oraz informację o zarezerwowanych książkach (isbn, data)
+select m.member_no, m.firstname, m.lastname, r.isbn, r.log_date
+from member as m
+join reservation as r
+on m.member_no = r.member_no
+where m.member_no = 250 or m.member_no = 342 or m.member_no = 1675;
+
 --Podaj listę członków biblioteki mieszkających w Arizonie (AZ) mają więcej niż dwoje dzieci zapisanych do biblioteki
+select j.adult_member_no, COUNT(j.member_no), m.firstname, m.lastname, a.state
+from member as m
+join adult as a
+on m.member_no = a.member_no
+join juvenile as j
+on a.member_no = j.adult_member_no
+where a.state = 'AZ'
+group by j.adult_member_no, m.firstname, m.lastname, a.state
+having COUNT(j.member_no) > 2
+
 
 --Podaj listę członków biblioteki mieszkających w Arizonie (AZ) którzy mają więcej niż dwoje dzieci zapisanych do biblioteki oraz takich którzy mieszkają w Kaliforni (CA) i mają więcej niż troje dzieci zapisanych do biblioteki
+--?????????????????????????????????????????????????????????????????????????????? do porawki!!!!!
+select j.adult_member_no, COUNT(j.member_no) as childereAZ, COUNT(j2.member_no) as childerenCA, m.firstname, m.lastname, a.state
+from member as m
+join adult as a
+on m.member_no = a.member_no
+join juvenile as j
+on a.member_no = j.adult_member_no
+join juvenile as j2
+on m.member_no = j2.adult_member_no
+where a.state = 'AZ' or a.state = 'CA'
+group by j.adult_member_no, m.firstname, m.lastname, a.state
+having COUNT(j.member_no) > 2 or COUNT(j2.member_no) > 3;
+
+
+
+--ĆWICZENIA
+--1.1 Dla każdego zamówienia podaj łączną liczbę zamówionych jednostek oraz nazwę klienta.
+
+
+
+--1.2 Zmodyfikuj poprzedni przykład, aby pokazać tylko takie zamówienia, dla których łączna liczbę zamówionych jednostek jest większa niż 250.
+--1.3 Dla każdego zamówienia podaj łączną wartość tego zamówienia oraz nazwę klienta.
+--1.4 Zmodyfikuj poprzedni przykład, aby pokazać tylko takie zamówienia, dla których łączna liczba jednostek jest większa niż 250.
+--1.5 Zmodyfikuj poprzedni przykład tak żeby dodać jeszcze imię i nazwisko pracownika obsługującego zamówienie
+--2.1 Dla każdej kategorii produktu (nazwa), podaj łączną liczbę zamówionych przez klientów jednostek towarów.
+--2.2 Dla każdej kategorii produktu (nazwa), podaj łączną wartość zamówień
+--2.3 Posortuj wyniki w zapytaniu z punktu 2.2 wg: a) łącznej wartości zamówień b) łącznej liczby zamówionych przez klientów jednostek towarów.
+--3.1 Dla każdego przewoźnika (nazwa) podaj liczbę zamówień które przewieźli w 1997r
+--3.2 Który z przewoźników był najaktywniejszy (przewiózł największą liczbę zamówień) w 1997r, podaj nazwę tego przewoźnika
+--3.3 Który z pracowników obsłużył największą liczbę zamówień w 1997r, podaj imię i nazwisko takiego pracownika
+--4.1 Dla każdego pracownika (imię i nazwisko) podaj łączną wartość zamówień obsłużonych przez tego pracownika
+--4.2 Który z pracowników obsłużył najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika
+--4.3 Ogranicz wynik z pkt 4.1 tylko do pracowników a) którzy mają podwładnych b) którzy nie mają podwładnych

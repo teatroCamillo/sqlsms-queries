@@ -120,12 +120,12 @@ group by OrderID
 having COUNT(ProductID) > 5;
 
 --2.Wyświetl klientów dla których w 1998 roku zrealizowano więcej niż 8 zamówień (wyniki posortuj malejąco wg łącznej kwoty za dostarczenie zamówień dla każdego z klientów)
-select CustomerID, COUNT(ShippedDate), SUM(freight)
+select CustomerID, COUNT(shippedDate), SUM(Freight) 
 from Orders
-where YEAR(OrderDate) = 1998
+where YEAR(ShippedDate) = 1998
 group by CustomerID
 having COUNT(ShippedDate) > 8
-order by sum(freight) desc;
+order by SUM(Freight)  desc;
 
 
 -- **********************************************************************************************************
@@ -161,9 +161,9 @@ from [Order Details]
 group by productid;
 
 --2.3.Podaj wartość zamówienia dla każdego zamówienia dla którego łączna liczba zamawianych jednostek produktów jest > 250
-select productid, sum(quantity) as quan, SUM(Quantity*(UnitPrice - (Unitprice * Discount))) as total
+select OrderID, SUM(quantity), SUM(UnitPrice * quantity * (1 - Discount)) as total
 from [Order Details]
-group by productid
+group by OrderID
 having SUM(quantity) > 250;
 
 --3.1.Napisz polecenie, które oblicza sumaryczną ilość zamówionych towarów, porządkuje wynik wg productid i ordered i wykonuje kalkulacje rollup.
@@ -181,13 +181,13 @@ group by productid, OrderID
 with rollup
 order by ProductID, OrderID;
 
---3.3.Jakie jest znaczenie wartości null w kolumnie productid i orderid?
-
 
 --4.1.Napisz polecenie, które zwraca productid, orderid i quantity dla wszystkich produktów/zamówień, których orderid > 11070. 
-select ProductID, orderid, quantity
+select ProductID, OrderID, Quantity
 from [Order Details]
-where OrderID > 11070;
+where OrderID > 11070
+group by ProductID, OrderID, Quantity
+with cube;
 
 
 --5.1.Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień
@@ -205,7 +205,8 @@ order by EmployeeID;
 --5.3.Dla każdego spedytora podaj wartość (opłata za przesyłkę) przewożonych przez niego zamówień
 select shipvia, sum(Freight)
 from orders
-group by ShipVia;
+group by ShipVia
+order by ShipVia;
 
 --5.4.Dla każdego spedytora podaj wartość (opłata za przesyłkę) przewożonych przez niego zamówień z podziałem na poszczególne lata
 select shipvia, YEAR(shippeddate) as y, sum(Freight)
