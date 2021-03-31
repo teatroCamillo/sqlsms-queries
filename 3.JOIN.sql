@@ -289,36 +289,177 @@ having COUNT(j.member_no) > 2
 
 
 --Podaj listę członków biblioteki mieszkających w Arizonie (AZ) którzy mają więcej niż dwoje dzieci zapisanych do biblioteki oraz takich którzy mieszkają w Kaliforni (CA) i mają więcej niż troje dzieci zapisanych do biblioteki
---?????????????????????????????????????????????????????????????????????????????? do porawki!!!!!
-select j.adult_member_no, COUNT(j.member_no) as childereAZ, COUNT(j2.member_no) as childerenCA, m.firstname, m.lastname, a.state
+use library;
+select m.member_no, COUNT(j.member_no) as children, m.firstname, m.lastname, a.state
 from member as m
 join adult as a
 on m.member_no = a.member_no
 join juvenile as j
 on a.member_no = j.adult_member_no
-join juvenile as j2
-on m.member_no = j2.adult_member_no
-where a.state = 'AZ' or a.state = 'CA'
-group by j.adult_member_no, m.firstname, m.lastname, a.state
-having COUNT(j.member_no) > 2 or COUNT(j2.member_no) > 3;
+group by m.member_no, m.firstname, m.lastname, a.state
+having (a.state = 'AZ' and COUNT(j.member_no) > 2) or (a.state = 'CA' and COUNT(j.member_no) > 3);
 
 
 
 --ĆWICZENIA
 --1.1 Dla każdego zamówienia podaj łączną liczbę zamówionych jednostek oraz nazwę klienta.
+use Northwind;
 
+select od.OrderID, SUM(od.Quantity) as total_amount, c.CompanyName
+from [Order Details] as od
+join Orders as o
+on od.OrderID = o.OrderID
+join Customers as c
+on o.CustomerID = c.CustomerID
+group by od.OrderID,  c.CompanyName;
 
 
 --1.2 Zmodyfikuj poprzedni przykład, aby pokazać tylko takie zamówienia, dla których łączna liczbę zamówionych jednostek jest większa niż 250.
+select od.OrderID, SUM(od.Quantity) as total_amount, c.CompanyName
+from [Order Details] as od
+join Orders as o
+on od.OrderID = o.OrderID
+join Customers as c
+on o.CustomerID = c.CustomerID
+group by od.OrderID,  c.CompanyName
+having SUM(od.quantity) > 250;
+
 --1.3 Dla każdego zamówienia podaj łączną wartość tego zamówienia oraz nazwę klienta.
+select od.OrderID, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total, c.CompanyName
+from [Order Details] as od
+join Orders as o
+on od.OrderID = o.OrderID
+join Customers as c
+on o.CustomerID = c.CustomerID
+group by od.OrderID,  c.CompanyName;
+
+
 --1.4 Zmodyfikuj poprzedni przykład, aby pokazać tylko takie zamówienia, dla których łączna liczba jednostek jest większa niż 250.
+select od.OrderID, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total, SUM(od.quantity) as quantityy, c.CompanyName
+from [Order Details] as od
+join Orders as o
+on od.OrderID = o.OrderID
+join Customers as c
+on o.CustomerID = c.CustomerID
+group by od.OrderID,  c.CompanyName
+having SUM(od.quantity) > 250;
+
+
 --1.5 Zmodyfikuj poprzedni przykład tak żeby dodać jeszcze imię i nazwisko pracownika obsługującego zamówienie
+select e.EmployeeID, e.LastName, e.FirstName, od.OrderID, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total, SUM(od.quantity) as quantityy, c.CompanyName
+from [Order Details] as od
+join Orders as o
+on od.OrderID = o.OrderID
+join Customers as c
+on o.CustomerID = c.CustomerID
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+group by e.EmployeeID, e.LastName, e.FirstName, od.OrderID, c.CompanyName
+having SUM(od.quantity) > 250;
+
 --2.1 Dla każdej kategorii produktu (nazwa), podaj łączną liczbę zamówionych przez klientów jednostek towarów.
---2.2 Dla każdej kategorii produktu (nazwa), podaj łączną wartość zamówień
---2.3 Posortuj wyniki w zapytaniu z punktu 2.2 wg: a) łącznej wartości zamówień b) łącznej liczby zamówionych przez klientów jednostek towarów.
+select ca.CategoryID, ca.CategoryName, SUM(od.Quantity) as total_quantity
+from Categories as ca
+join Products as p
+on ca.CategoryID = p.CategoryID
+join [Order Details] as od
+on p.ProductID = od.ProductID
+group by ca.CategoryID, ca.CategoryName;
+
+--2.2 Dla każdej kategorii produktu (nazwa), podaj łączną wartość zamówień 
+select ca.CategoryID, ca.CategoryName,SUM(od.Quantity) as total_quantity, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Categories as ca
+join Products as p
+on ca.CategoryID = p.CategoryID
+join [Order Details] as od
+on p.ProductID = od.ProductID
+group by ca.CategoryID, ca.CategoryName;
+
+--2.3 Posortuj wyniki w zapytaniu z punktu 2.2 wg: 
+--a) łącznej wartości zamówień 
+select ca.CategoryID, ca.CategoryName, SUM(od.Quantity) as total_quantity, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Categories as ca
+join Products as p
+on ca.CategoryID = p.CategoryID
+join [Order Details] as od
+on p.ProductID = od.ProductID
+group by ca.CategoryID, ca.CategoryName
+order by total;
+
+--b) łącznej liczby zamówionych przez klientów jednostek towarów.
+select ca.CategoryID, ca.CategoryName, SUM(od.Quantity) as total_quantity, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Categories as ca
+join Products as p
+on ca.CategoryID = p.CategoryID
+join [Order Details] as od
+on p.ProductID = od.ProductID
+group by ca.CategoryID, ca.CategoryName
+order by total_quantity;
+
+
 --3.1 Dla każdego przewoźnika (nazwa) podaj liczbę zamówień które przewieźli w 1997r
+select s.ShipperID, s.CompanyName, COUNT(o.OrderID) as amount_via
+from Shippers as s
+join Orders as o
+on s.ShipperID = o.ShipVia
+where Year(o.ShippedDate) = '1997'
+group by s.ShipperID, s.CompanyName;
+
+
 --3.2 Który z przewoźników był najaktywniejszy (przewiózł największą liczbę zamówień) w 1997r, podaj nazwę tego przewoźnika
+select top 1 s.ShipperID, s.CompanyName, COUNT(o.OrderID) as amount_via
+from Shippers as s
+join Orders as o
+on s.ShipperID = o.ShipVia
+where Year(o.ShippedDate) = '1997'
+group by s.ShipperID, s.CompanyName
+order by amount_via desc;
+
 --3.3 Który z pracowników obsłużył największą liczbę zamówień w 1997r, podaj imię i nazwisko takiego pracownika
+select top 1 e.FirstName, e.LastName, COUNT(o.OrderID) as max_liczba_obs
+from Orders as o 
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+where Year(o.OrderDate) = '1997'
+group by e.FirstName, e.LastName
+order by max_liczba_obs desc;
+
 --4.1 Dla każdego pracownika (imię i nazwisko) podaj łączną wartość zamówień obsłużonych przez tego pracownika
+select e.FirstName, e.LastName, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Orders as o 
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+join [Order Details] as od
+on o.OrderID = od.OrderID
+group by e.FirstName, e.LastName;
+
 --4.2 Który z pracowników obsłużył najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika
---4.3 Ogranicz wynik z pkt 4.1 tylko do pracowników a) którzy mają podwładnych b) którzy nie mają podwładnych
+select top 1 e.FirstName, e.LastName, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Orders as o 
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+join [Order Details] as od
+on o.OrderID = od.OrderID
+group by e.FirstName, e.LastName
+order by total desc;
+
+--4.3 Ogranicz wynik z pkt 4.1 tylko do pracowników 
+--a) którzy mają podwładnych 
+select e.FirstName, e.LastName, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Orders as o 
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+join [Order Details] as od
+on o.OrderID = od.OrderID
+where e.ReportsTo is not null
+group by e.FirstName, e.LastName
+
+--b) którzy nie mają podwładnych
+select e.FirstName, e.LastName, SUM(od.Quantity * (od.UnitPrice * (1 - od.Discount))) as total
+from Orders as o 
+join Employees as e
+on o.EmployeeID = e.EmployeeID
+join [Order Details] as od
+on o.OrderID = od.OrderID
+where e.ReportsTo is null
+group by e.FirstName, e.LastName
